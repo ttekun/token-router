@@ -1,0 +1,122 @@
+2026-06-02T10:00:001Z INFO worker heartbeat ok request_id=req-001
+2026-06-02T10:00:002Z INFO worker heartbeat ok request_id=req-002
+2026-06-02T10:00:003Z INFO worker heartbeat ok request_id=req-003
+2026-06-02T10:00:004Z INFO worker heartbeat ok request_id=req-004
+2026-06-02T10:00:005Z INFO worker heartbeat ok request_id=req-005
+2026-06-02T10:00:006Z INFO worker heartbeat ok request_id=req-006
+2026-06-02T10:00:007Z INFO worker heartbeat ok request_id=req-007
+2026-06-02T10:00:008Z INFO worker heartbeat ok request_id=req-008
+2026-06-02T10:00:009Z INFO worker heartbeat ok request_id=req-009
+2026-06-02T10:00:010Z INFO worker heartbeat ok request_id=req-010
+2026-06-02T10:00:011Z INFO worker heartbeat ok request_id=req-011
+2026-06-02T10:00:012Z INFO worker heartbeat ok request_id=req-012
+2026-06-02T10:00:013Z INFO worker heartbeat ok request_id=req-013
+2026-06-02T10:00:014Z INFO worker heartbeat ok request_id=req-014
+2026-06-02T10:00:015Z INFO worker heartbeat ok request_id=req-015
+2026-06-02T10:00:016Z INFO worker heartbeat ok request_id=req-016
+2026-06-02T10:00:017Z INFO worker heartbeat ok request_id=req-017
+2026-06-02T10:00:018Z INFO worker heartbeat ok request_id=req-018
+2026-06-02T10:00:019Z INFO worker heartbeat ok request_id=req-019
+2026-06-02T10:00:020Z INFO worker heartbeat ok request_id=req-020
+2026-06-02T10:00:021Z INFO worker heartbeat ok request_id=req-021
+2026-06-02T10:00:022Z INFO worker heartbeat ok request_id=req-022
+2026-06-02T10:00:023Z INFO worker heartbeat ok request_id=req-023
+2026-06-02T10:00:024Z INFO worker heartbeat ok request_id=req-024
+2026-06-02T10:00:025Z INFO worker heartbeat ok request_id=req-025
+2026-06-02T10:00:026Z INFO worker heartbeat ok request_id=req-026
+2026-06-02T10:00:027Z INFO worker heartbeat ok request_id=req-027
+2026-06-02T10:00:028Z INFO worker heartbeat ok request_id=req-028
+2026-06-02T10:00:029Z INFO worker heartbeat ok request_id=req-029
+2026-06-02T10:00:030Z INFO worker heartbeat ok request_id=req-030
+2026-06-02T10:00:031Z INFO worker heartbeat ok request_id=req-031
+2026-06-02T10:00:032Z INFO worker heartbeat ok request_id=req-032
+2026-06-02T10:00:033Z INFO worker heartbeat ok request_id=req-033
+2026-06-02T10:00:034Z INFO worker heartbeat ok request_id=req-034
+2026-06-02T10:00:035Z INFO worker heartbeat ok request_id=req-035
+2026-06-02T10:00:036Z INFO worker heartbeat ok request_id=req-036
+2026-06-02T10:00:037Z INFO worker heartbeat ok request_id=req-037
+2026-06-02T10:00:038Z INFO worker heartbeat ok request_id=req-038
+2026-06-02T10:00:039Z INFO worker heartbeat ok request_id=req-039
+2026-06-02T10:00:040Z INFO worker heartbeat ok request_id=req-040
+2026-06-02T10:00:041Z INFO worker heartbeat ok request_id=req-041
+2026-06-02T10:00:042Z INFO worker heartbeat ok request_id=req-042
+2026-06-02T10:00:043Z INFO worker heartbeat ok request_id=req-043
+2026-06-02T10:00:044Z INFO worker heartbeat ok request_id=req-044
+2026-06-02T10:00:045Z INFO worker heartbeat ok request_id=req-045
+2026-06-02T10:00:046Z INFO worker heartbeat ok request_id=req-046
+2026-06-02T10:00:047Z INFO worker heartbeat ok request_id=req-047
+2026-06-02T10:00:048Z INFO worker heartbeat ok request_id=req-048
+2026-06-02T10:00:049Z INFO worker heartbeat ok request_id=req-049
+2026-06-02T10:00:050Z INFO worker heartbeat ok request_id=req-050
+2026-06-02T10:00:051Z INFO worker heartbeat ok request_id=req-051
+2026-06-02T10:00:052Z INFO worker heartbeat ok request_id=req-052
+2026-06-02T10:00:053Z INFO worker heartbeat ok request_id=req-053
+2026-06-02T10:00:054Z INFO worker heartbeat ok request_id=req-054
+2026-06-02T10:00:055Z INFO worker heartbeat ok request_id=req-055
+2026-06-02T10:00:056Z INFO worker heartbeat ok request_id=req-056
+2026-06-02T10:00:057Z INFO worker heartbeat ok request_id=req-057
+2026-06-02T10:00:058Z INFO worker heartbeat ok request_id=req-058
+2026-06-02T10:00:059Z INFO worker heartbeat ok request_id=req-059
+2026-06-02T10:00:060Z INFO worker heartbeat ok request_id=req-060
+2026-06-02T10:00:061Z INFO worker heartbeat ok request_id=req-061
+2026-06-02T10:00:062Z INFO worker heartbeat ok request_id=req-062
+2026-06-02T10:00:063Z INFO worker heartbeat ok request_id=req-063
+2026-06-02T10:00:064Z INFO worker heartbeat ok request_id=req-064
+2026-06-02T10:00:065Z INFO worker heartbeat ok request_id=req-065
+2026-06-02T10:00:066Z INFO worker heartbeat ok request_id=req-066
+2026-06-02T10:00:067Z INFO worker heartbeat ok request_id=req-067
+2026-06-02T10:00:068Z INFO worker heartbeat ok request_id=req-068
+2026-06-02T10:00:069Z INFO worker heartbeat ok request_id=req-069
+2026-06-02T10:00:070Z INFO worker heartbeat ok request_id=req-070
+2026-06-02T10:00:071Z INFO worker heartbeat ok request_id=req-071
+2026-06-02T10:00:072Z INFO worker heartbeat ok request_id=req-072
+2026-06-02T10:00:073Z INFO worker heartbeat ok request_id=req-073
+2026-06-02T10:00:074Z INFO worker heartbeat ok request_id=req-074
+2026-06-02T10:00:075Z INFO worker heartbeat ok request_id=req-075
+2026-06-02T10:00:076Z INFO worker heartbeat ok request_id=req-076
+2026-06-02T10:00:077Z INFO worker heartbeat ok request_id=req-077
+2026-06-02T10:00:078Z INFO worker heartbeat ok request_id=req-078
+2026-06-02T10:00:079Z INFO worker heartbeat ok request_id=req-079
+2026-06-02T10:00:080Z INFO worker heartbeat ok request_id=req-080
+2026-06-02T10:00:081Z INFO worker heartbeat ok request_id=req-081
+2026-06-02T10:00:082Z INFO worker heartbeat ok request_id=req-082
+2026-06-02T10:00:083Z INFO worker heartbeat ok request_id=req-083
+2026-06-02T10:00:084Z INFO worker heartbeat ok request_id=req-084
+2026-06-02T10:00:085Z INFO worker heartbeat ok request_id=req-085
+2026-06-02T10:00:086Z INFO worker heartbeat ok request_id=req-086
+2026-06-02T10:00:087Z INFO worker heartbeat ok request_id=req-087
+2026-06-02T10:00:088Z INFO worker heartbeat ok request_id=req-088
+2026-06-02T10:00:089Z INFO worker heartbeat ok request_id=req-089
+2026-06-02T10:00:090Z INFO worker heartbeat ok request_id=req-090
+2026-06-02T10:00:091Z INFO worker heartbeat ok request_id=req-091
+2026-06-02T10:00:092Z INFO worker heartbeat ok request_id=req-092
+2026-06-02T10:00:093Z INFO worker heartbeat ok request_id=req-093
+2026-06-02T10:00:094Z INFO worker heartbeat ok request_id=req-094
+2026-06-02T10:00:095Z INFO worker heartbeat ok request_id=req-095
+2026-06-02T10:00:096Z INFO worker heartbeat ok request_id=req-096
+2026-06-02T10:00:097Z INFO worker heartbeat ok request_id=req-097
+2026-06-02T10:00:098Z INFO worker heartbeat ok request_id=req-098
+2026-06-02T10:00:099Z INFO worker heartbeat ok request_id=req-099
+2026-06-02T10:00:100Z INFO worker heartbeat ok request_id=req-100
+2026-06-02T10:00:101Z INFO payment worker retry scheduled
+2026-06-02T10:00:102Z INFO payment worker queue depth normal
+2026-06-02T10:00:103Z INFO payment worker retry scheduled
+2026-06-02T10:00:104Z INFO payment worker queue depth normal
+2026-06-02T10:00:105Z INFO payment worker retry scheduled
+2026-06-02T10:00:106Z INFO payment worker queue depth normal
+2026-06-02T10:00:107Z INFO payment worker retry scheduled
+2026-06-02T10:00:108Z INFO payment worker queue depth normal
+2026-06-02T10:00:109Z INFO payment worker retry scheduled
+2026-06-02T10:00:110Z INFO payment worker queue depth normal
+2026-06-02T10:00:111Z INFO payment worker retry scheduled
+2026-06-02T10:00:112Z INFO payment worker queue depth normal
+2026-06-02T10:00:113Z INFO payment worker retry scheduled
+2026-06-02T10:00:114Z INFO payment worker queue depth normal
+2026-06-02T10:00:115Z INFO payment worker retry scheduled
+2026-06-02T10:00:116Z INFO payment worker queue depth normal
+2026-06-02T10:00:117Z INFO payment worker retry scheduled
+2026-06-02T10:00:118Z INFO payment worker queue depth normal
+2026-06-02T10:00:119Z INFO payment worker retry scheduled
+2026-06-02T10:00:120Z ERROR payment timeout while acquiring gateway connection
+2026-06-02T10:00:121Z stack trace frame: payments.charge -> gateway.acquire -> timeout
+2026-06-02T10:00:122Z FATAL payment processor aborted

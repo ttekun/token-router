@@ -1,0 +1,122 @@
+[
+  {
+    "name": "query pass-through locates token expiration",
+    "fixture": "fixtures/query_token_expiration.py",
+    "mode": "heavy_code",
+    "query": "token expiration",
+    "prompt_contains": [
+      "[User Query]: token expiration",
+      "def token_expiration_seconds(user):",
+      "session_token_expires_at"
+    ],
+    "mock_response": {
+      "targets": [
+        {
+          "start_line": 8,
+          "end_line": 11,
+          "reason": "token expiration logic"
+        }
+      ]
+    },
+    "expected_contains_lines": [8, 9, 10, 11],
+    "expected_output_contains": ["token expiration logic"]
+  },
+  {
+    "name": "overlap merge and output cap",
+    "fixture": "fixtures/overlap_lines.txt",
+    "mode": "heavy_code",
+    "env": {
+      "ROUTER_MAX_OUTPUT_LINES": "5"
+    },
+    "mock_response": {
+      "targets": [
+        {
+          "start_line": 10,
+          "end_line": 14,
+          "reason": "first"
+        },
+        {
+          "start_line": 12,
+          "end_line": 20,
+          "reason": "second"
+        },
+        {
+          "start_line": "bad",
+          "end_line": 30,
+          "reason": "malformed"
+        }
+      ]
+    },
+    "expected_contains_lines": [10, 11, 12, 13, 14],
+    "expected_output_contains": ["first; second [truncated by ROUTER_MAX_OUTPUT_LINES]"]
+  },
+  {
+    "name": "streaming log tail finds late error",
+    "fixture": "fixtures/huge_tail.log",
+    "mode": "error_log",
+    "query": "payment timeout",
+    "env": {
+      "ROUTER_STREAM_THRESHOLD_BYTES": "1",
+      "ROUTER_LOG_TAIL_LINES": "20"
+    },
+    "mock_response": {
+      "targets": [
+        {
+          "start_line": 120,
+          "end_line": 122,
+          "reason": "late payment timeout"
+        }
+      ]
+    },
+    "expected_contains_lines": [120, 121, 122],
+    "expected_output_contains": ["late payment timeout"]
+  },
+  {
+    "name": "multi-word query terms are shown in prompt",
+    "fixture": "fixtures/query_token_expiration.py",
+    "mode": "heavy_code",
+    "query": "token expiration timeout logic",
+    "prompt_contains": [
+      "[User Query]: token expiration timeout logic",
+      "[Query Terms]: token, expiration, timeout, logic",
+      "def token_expiration_seconds(user):"
+    ],
+    "mock_response": {
+      "targets": [
+        {
+          "start_line": 8,
+          "end_line": 11,
+          "reason": "token expiration logic"
+        }
+      ]
+    },
+    "expected_contains_lines": [8, 9, 10, 11],
+    "expected_output_contains": ["token expiration logic"]
+  },
+  {
+    "name": "error_log cap keeps latest ranges",
+    "fixture": "fixtures/overlap_lines.txt",
+    "mode": "error_log",
+    "env": {
+      "ROUTER_MAX_OUTPUT_LINES": "4"
+    },
+    "mock_response": {
+      "targets": [
+        {
+          "start_line": 2,
+          "end_line": 5,
+          "reason": "old error"
+        },
+        {
+          "start_line": 24,
+          "end_line": 28,
+          "reason": "latest error"
+        }
+      ]
+    },
+    "expected_contains_lines": [25, 26, 27, 28],
+    "expected_output_contains": [
+      "latest error [older lines truncated by ROUTER_MAX_OUTPUT_LINES]"
+    ]
+  }
+]
