@@ -4,7 +4,7 @@ Date: 2026-06-02
 
 ## Summary
 
-`token-router` was benchmarked against three synthetic workloads: a sparse infra log, a legacy source file with an explicit bug marker, and a keywordless structural source file. All three routed successfully without fallback in the primary benchmark run, and `ollama ps` was empty afterward, confirming the model did not remain resident after execution.
+`token-router` was benchmarked against three synthetic workloads: a sparse infra log, a legacy source file with an explicit bug marker, and a keywordless structural source file. The router also now includes regression coverage for `agent_context`, a static instruction-reference routing mode for long routeable agent context files. Primary benchmark workloads routed successfully without fallback, and `ollama ps` was empty afterward, confirming the model did not remain resident after execution.
 
 Token counts are estimates using `chars / 4`.
 
@@ -36,14 +36,22 @@ Latest mock regression suite:
 [OK] streaming log tail finds late error
 [OK] multi-word query terms are shown in prompt
 [OK] error_log cap keeps latest ranges
+[OK] agent_context query routes deployment approval
+[OK] agent_context query routes frontend testing
+[OK] agent_context no query keeps mandatory rules in prompt
+[OK] agent_context output cap preserves early mandatory rules
+[OK] agent_context fallback preview uses instruction keywords
 ```
 
 ## Real Smoke Checks
 
 - `heavy_code --query "token expiration timeout logic"` selected the token expiration timestamp lines while exposing `[Query Terms]`.
 - Forced streaming `error_log --query "payment timeout"` returned raw late-log candidate lines through deterministic fallback when the local model omitted `targets`.
+- `agent_context --query "frontend testing"` selected the frontend testing workflow section from a routeable instruction-reference fixture.
 - `ollama ps` was empty after smoke runs.
 
 ## Caveat
 
 These metrics prove context reduction and routing mechanics on controlled fixtures. They do not prove correctness for every production incident. For high-stakes debugging, treat router output as a first pass and expand nearby lines when the cloud model detects missing dependencies.
+
+For static agent instructions, `agent_context` does not reduce the cost of a long root instruction file after it has already been auto-injected into a session. The recommended architecture is a compact always-on root file plus longer routeable reference files that are pulled through the router only when task-relevant.

@@ -49,11 +49,12 @@ LOG_CONTEXT_LINES = env_int("ROUTER_LOG_CONTEXT_LINES", 6, minimum=0)
 LOG_TAIL_LINES = env_int("ROUTER_LOG_TAIL_LINES", 200, minimum=0)
 STREAM_THRESHOLD_BYTES = env_int("ROUTER_STREAM_THRESHOLD_BYTES", 5_000_000, minimum=1)
 CODE_CONTEXT_LINES = env_int("ROUTER_CODE_CONTEXT_LINES", 8, minimum=0)
+AGENT_CONTEXT_LINES = env_int("ROUTER_AGENT_CONTEXT_LINES", 6, minimum=0)
 MAX_OUTPUT_LINES = env_int("ROUTER_MAX_OUTPUT_LINES", 160, minimum=1)
 NUM_CTX = env_int("OLLAMA_NUM_CTX", 8192, minimum=1024)
 KEEP_ALIVE = os.environ.get("OLLAMA_KEEP_ALIVE", "0s")
 FALLBACK_PREVIEW_CHARS = 2000
-VALID_MODES = {"error_log", "heavy_code"}
+VALID_MODES = {"agent_context", "error_log", "heavy_code"}
 LOG_KEYWORD_PATTERN = re.compile(
     r"\b(error|exception|fail(?:ed|ure)?|fatal|panic|traceback|timeout|timed out|"
     r"denied|refused|unavailable|stack trace|segfault|oom|out of memory)\b",
@@ -69,10 +70,23 @@ CODE_STRUCTURE_PATTERN = re.compile(
     r"function\s+|const\s+\w+\s*=\s*(?:async\s*)?\(|let\s+\w+\s*=\s*(?:async\s*)?\(|"
     r"export\s+(?:default\s+)?(?:function|class|const)|interface\s+|type\s+)",
 )
+AGENT_CONTEXT_KEYWORD_PATTERN = re.compile(
+    r"\b(must|never|always|do not|required|forbidden|workflow|steps|process|"
+    r"handoff|plan|review|approval|sandbox|permissions|secrets|credentials|"
+    r"test|tests|validate|verify|verification|acceptance|deploy|deployment|"
+    r"frontend|backend|database|migration|security|policy|tool|tools)\b",
+    re.IGNORECASE,
+)
+AGENT_CONTEXT_STRUCTURE_PATTERN = re.compile(
+    r"^\s*(---\s*$|#{1,6}\s+|[-*]\s+|\d+\.\s+|[A-Za-z0-9 _/-]+:\s*$)"
+)
 
 
 def usage() -> str:
-    return "Usage: python3 scripts/router.py <error_log|heavy_code> <PATH_TO_TARGET_FILE> [--query \"...\"]"
+    return (
+        "Usage: python3 scripts/router.py <agent_context|error_log|heavy_code> "
+        "<PATH_TO_TARGET_FILE> [--query \"...\"]"
+    )
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -236,6 +250,48 @@ def code_candidate_content(
     return rendered, truncated, len(selected), "code structure/head-tail"
 
 
+def agent_context_candidate_content(
+    raw_text: str,
+    max_chars: int,
+    query_terms: list[str],
+) -> tuple[str, bool, int, str]:
+    lines = raw_text.splitlines(keepends=True)
+    selected: set[int] = set()
+
+    selected.update(range(min(30, len(lines))))
+    selected.update(range(max(0, len(lines) - 30), len(lines)))
+
+    in_frontmatter = False
+    frontmatter_started = False
+    for idx, line in enumerate(lines):
+        stripped = line.strip()
+        if idx == 0 and stripped == "---":
+            in_frontmatter = True
+            frontmatter_started = True
+        elif in_frontmatter and stripped == "---":
+            selected.add(idx)
+            in_frontmatter = False
+        if in_frontmatter or (frontmatter_started and idx <= 40 and stripped == "---"):
+            selected.add(idx)
+
+        is_query_hit = query_matches(line, query_terms)
+        is_instruction_hit = AGENT_CONTEXT_KEYWORD_PATTERN.search(line)
+        is_structure_hit = AGENT_CONTEXT_STRUCTURE_PATTERN.search(line)
+        if is_query_hit or is_instruction_hit:
+            start = max(0, idx - AGENT_CONTEXT_LINES)
+            end = min(len(lines), idx + AGENT_CONTEXT_LINES + 1)
+            selected.update(range(start, end))
+        elif is_structure_hit:
+            selected.add(idx)
+
+    if not selected:
+        rendered, truncated = numbered_content(raw_text, max_chars)
+        return rendered, truncated, len(lines), "agent context full fallback"
+
+    rendered, truncated = render_selected_lines(lines, selected, max_chars)
+    return rendered, truncated, len(selected), "agent context query/rule/head-tail"
+
+
 def streaming_log_candidate_content(
     file_path: Path,
     max_chars: int,
@@ -301,7 +357,7 @@ def build_prompt(
             f"{candidate_count} candidate original log lines plus context. Line "
             "numbers still refer to the original file."
         )
-    else:
+    elif mode == "heavy_code":
         line_numbered, truncated, candidate_count, candidate_kind = code_candidate_content(
             file_content, MAX_PROMPT_CHARS, query_terms
         )
@@ -311,6 +367,16 @@ def build_prompt(
                 f"containing {candidate_count} candidate original lines plus "
                 "context. Line numbers still refer to the original file."
             )
+    else:
+        line_numbered, truncated, candidate_count, candidate_kind = agent_context_candidate_content(
+            file_content, MAX_PROMPT_CHARS, query_terms
+        )
+        if candidate_count != len(file_content.splitlines()):
+            candidate_note = (
+                f"\nThe content below is a deterministic {candidate_kind} prefilter "
+                f"containing {candidate_count} candidate original instruction lines "
+                "plus context. Line numbers still refer to the original file."
+            )
 
     truncation_note = ""
     if truncated:
@@ -319,12 +385,29 @@ def build_prompt(
             "Only identify targets from visible line-numbered content."
         )
 
+    mode_instructions = {
+        "error_log": (
+            "Identify exact line ranges most relevant to the error, stack trace, "
+            "failure, timeout, exception, or latest operational incident."
+        ),
+        "heavy_code": (
+            "Identify exact line ranges most relevant to the bug, core logic, "
+            "code path, error handling, or implementation detail."
+        ),
+        "agent_context": (
+            "Identify exact line ranges containing agent instructions, constraints, "
+            "workflows, tool rules, safety requirements, verification rules, or "
+            "operating context relevant to the user's task. Prefer mandatory rules "
+            "and query-relevant sections."
+        ),
+    }
+
     return (
-        "You are a precise structural router. Identify exact line ranges most relevant "
-        "to the error, bug, stack trace, failure, or core logic. When query terms are "
-        "provided, match any of those terms as well as the full user query. Return only JSON with "
-        "this shape and no markdown, no code fences, no commentary, and no hidden "
-        "reasoning:\n"
+        "You are a precise structural router. "
+        f"{mode_instructions.get(mode, mode_instructions['heavy_code'])} "
+        "When query terms are provided, match any of those terms as well as the "
+        "full user query. Return only JSON with this shape and no markdown, no "
+        "code fences, no commentary, and no hidden reasoning:\n"
         '{"targets":[{"start_line":1,"end_line":1,"reason":"brief reason"}]}\n\n'
         f"[Context Type]: {mode}\n"
         f"[User Query]: {query or 'N/A'}\n"
@@ -479,6 +562,7 @@ def targets_from_numbered_content(
     numbered_content_text: str,
     total_lines: int,
     reason: str,
+    mode: str = "error_log",
 ) -> list[dict[str, Any]]:
     line_numbers = [
         int(match.group(1))
@@ -496,7 +580,7 @@ def targets_from_numbered_content(
         ranges.append({"start_line": start, "end_line": previous, "reason": reason})
         start = previous = line_no
     ranges.append({"start_line": start, "end_line": previous, "reason": reason})
-    return normalize_targets({"targets": ranges}, total_lines, mode="error_log")
+    return normalize_targets({"targets": ranges}, total_lines, mode=mode)
 
 
 def slice_raw(lines: list[str], start: int, end: int) -> str:
@@ -505,24 +589,30 @@ def slice_raw(lines: list[str], start: int, end: int) -> str:
     return "".join(lines[start_idx:end_idx])
 
 
-def keyword_preview(raw_text: str, limit: int = 12) -> str:
+def keyword_preview(raw_text: str, mode: str = "heavy_code", limit: int = 12) -> str:
     lines = raw_text.splitlines()
     matches: list[str] = []
+    if mode == "error_log":
+        patterns = (LOG_KEYWORD_PATTERN,)
+    elif mode == "agent_context":
+        patterns = (AGENT_CONTEXT_KEYWORD_PATTERN, AGENT_CONTEXT_STRUCTURE_PATTERN)
+    else:
+        patterns = (CODE_KEYWORD_PATTERN, LOG_KEYWORD_PATTERN)
     for idx, line in enumerate(lines, start=1):
-        if LOG_KEYWORD_PATTERN.search(line) or CODE_KEYWORD_PATTERN.search(line):
+        if any(pattern.search(line) for pattern in patterns):
             matches.append(f"{idx}: {line}")
             if len(matches) >= limit:
                 break
     return "\n".join(matches)
 
 
-def fallback(reason: str, raw_text: str | None = None) -> str:
+def fallback(reason: str, raw_text: str | None = None, mode: str = "heavy_code") -> str:
     output = [
         "#### Router Fallback",
         f"Reason: {reason}",
     ]
     if raw_text:
-        preview_matches = keyword_preview(raw_text)
+        preview_matches = keyword_preview(raw_text, mode=mode)
         preview = raw_text[:FALLBACK_PREVIEW_CHARS]
         if preview_matches:
             output.extend(
@@ -611,15 +701,15 @@ def main(argv: list[str]) -> int:
     query = args.query.strip()
 
     if not target_file.exists():
-        print(fallback(f"File not found: {target_file}"))
+        print(fallback(f"File not found: {target_file}", mode=mode))
         return 1
     if not target_file.is_file():
-        print(fallback(f"Path is not a regular file: {target_file}"))
+        print(fallback(f"Path is not a regular file: {target_file}", mode=mode))
         return 1
 
     file_size = target_file.stat().st_size
     if file_size == 0:
-        print(fallback("File is empty."))
+        print(fallback("File is empty.", mode=mode))
         return 1
 
     fallback_text = ""
@@ -648,6 +738,7 @@ def main(argv: list[str]) -> int:
                     candidate_content,
                     total_lines,
                     f"deterministic streaming fallback after Ollama failure: {exc}",
+                    mode=mode,
                 )
                 if not targets:
                     raise
@@ -657,7 +748,7 @@ def main(argv: list[str]) -> int:
         raw_text = read_text(target_file)
         fallback_text = raw_text
         if not raw_text:
-            print(fallback("File is empty."))
+            print(fallback("File is empty.", mode=mode))
             return 1
 
         mapping = call_ollama(build_prompt(raw_text, mode, query=query))
@@ -675,7 +766,7 @@ def main(argv: list[str]) -> int:
                 fallback_text = read_preview(target_file)
             except OSError:
                 fallback_text = ""
-        print(fallback(str(exc), fallback_text))
+        print(fallback(str(exc), fallback_text, mode=mode))
         return 1
 
     print(render_slices(raw_text, targets), end="")

@@ -6,19 +6,20 @@
 ![Ollama](https://img.shields.io/badge/Ollama-local%20routing-black)
 ![Codex Skill](https://img.shields.io/badge/OpenAI%20Codex-skill-green)
 
-**Lossless local line routing for massive logs and source files before they reach a cloud reasoning model.**
+**Lossless local line routing for massive logs, source files, and routeable agent-context references before they reach a cloud reasoning model.**
 
 `token-router` is a Codex skill and standalone Python router that uses a local Ollama model to identify exact line ranges in oversized files, then returns the raw, unmodified slices to a high-reasoning cloud model such as GPT-5.5, o3, or another AI coding agent.
 
 ## Executive Summary
 
-Large logs and legacy source files are expensive context. Sending a 2,000+ line deployment log or monolithic source file directly to a cloud LLM can waste tokens, increase latency, and exhaust budgets before the model reaches the evidence that matters.
+Large logs, legacy source files, and long agent instruction references are expensive context. Sending a 2,000+ line deployment log, monolithic source file, or routeable project-rules document directly to a cloud LLM can waste tokens, increase latency, and exhaust budgets before the model reaches the evidence that matters.
 
 `token-router` solves this with a hybrid separation-of-concerns architecture:
 
 - **Local model for search and triage:** Gemma 4 via Ollama runs on the user's machine and scans large files for relevant line coordinates.
 - **Cloud model for reasoning:** GPT-5.5, o3, or another cloud model receives only raw high-density evidence slices and applies deep reasoning where it matters.
 - **No lossy summarization:** The local model does not rewrite, summarize, or interpret code. It emits JSON line ranges; the router then extracts exact raw text from the original file.
+- **Static context routing:** Long optional agent-reference docs can be routed on demand while short mandatory root instructions stay always-on.
 
 The result is aggressive context reduction without degrading the technical evidence available to the reasoning model.
 
@@ -49,17 +50,29 @@ Summarizing source code or logs through a smaller local model is lossy. A single
 
 The selection step can be imperfect, but the extracted evidence itself is lossless. If the cloud model needs more context, it can request wider line ranges instead of hallucinating around omitted dependencies.
 
+### Static Agent Context Routing
+
+`agent_context` mode extends the same line-routing architecture to long instruction references such as detailed `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, `.cursorrules`, or `agent-context/*.md` files.
+
+The important boundary is architectural: if a platform has already injected a long root instruction file into the prompt, `token-router` cannot retroactively remove that token cost. The intended pattern is:
+
+1. Keep the root always-on instruction file compact.
+2. Move long task-specific rules into routeable reference files.
+3. Use `agent_context` with the current task query to retrieve only relevant raw rule slices.
+
 ## Features & Context Safety Guardrails
 
-- **Two routing modes**
+- **Three routing modes**
   - `error_log`: optimized for logs, stack traces, CI output, and deployment failures.
   - `heavy_code`: optimized for long source files and localized code investigations.
+  - `agent_context`: optimized for long routeable agent instruction references.
 - **Query pass-through**
   - Use `--query "token expiration"` to bias routing toward user intent.
   - Multi-word queries are tokenized and exposed as `[Query Terms]` so the local model can match any relevant term, not only the full phrase.
 - **Deterministic prefilters**
   - Log mode uses keyword and tail-window scanning.
   - Code mode prioritizes query hits, then suspicious code markers, then structural head/tail previews.
+  - Agent-context mode prioritizes query hits, frontmatter, headings, mandatory rules, workflow/tool/security/testing keywords, and head/tail context.
 - **Lossless raw slicing**
   - Router output is copied from the original file by line number.
 - **Output caps**
@@ -109,6 +122,13 @@ OLLAMA_NUM_CTX=4096 OLLAMA_KEEP_ALIVE=0s \
 python3 scripts/router.py heavy_code path/to/service.py --query "token expiration"
 ```
 
+### Run Against A Routeable Agent Context Reference
+
+```bash
+OLLAMA_NUM_CTX=4096 OLLAMA_KEEP_ALIVE=0s \
+python3 scripts/router.py agent_context path/to/agent-context/frontend.md --query "frontend testing workflow"
+```
+
 ### Use As A Codex Skill
 
 Install or copy this repository into your Codex skills directory:
@@ -122,6 +142,18 @@ Then invoke it naturally:
 
 ```text
 Use $token-router to analyze this large log with query "payment timeout".
+Use $token-router agent_context to route this long AGENTS.md reference for "deployment approval".
+```
+
+### Use With Claude Code
+
+This repository includes a compact [CLAUDE.md](CLAUDE.md) bootstrap for Claude Code. It tells Claude to call the same router script instead of loading oversized logs, source files, or long routeable instruction references directly.
+
+Keep project-level `CLAUDE.md` files short when they are automatically loaded by Claude Code. Put long task-specific guidance in separate reference files, then route them on demand:
+
+```bash
+OLLAMA_NUM_CTX=4096 OLLAMA_KEEP_ALIVE=0s \
+python3 scripts/router.py agent_context path/to/claude-context.md --query "deployment approval"
 ```
 
 ## Configuration
@@ -139,6 +171,7 @@ Use $token-router to analyze this large log with query "payment timeout".
 | `ROUTER_LOG_CONTEXT_LINES` | `6` | Log context lines around keyword/query hits |
 | `ROUTER_LOG_TAIL_LINES` | `200` | Tail lines preserved for large logs |
 | `ROUTER_CODE_CONTEXT_LINES` | `8` | Code context lines around query/keyword hits |
+| `ROUTER_AGENT_CONTEXT_LINES` | `6` | Agent-context lines around query/instruction keyword hits |
 
 ## Regression Tests
 
@@ -162,6 +195,9 @@ python3 scripts/run_router_tests.py tests/router-tests.json --real
 | CI logs with stack traces | Yes | Keyword and tail scanning preserve high-value ranges |
 | Long files with a specific bug or query | Yes | `--query` and code markers narrow routing safely |
 | Legacy files with `TODO`, `FIXME`, `raise`, or `assert` markers | Yes | Code keyword windows are highly effective |
+| Long routeable agent-reference docs | Yes | `agent_context` retrieves task-relevant raw instruction slices |
+| Compact root `AGENTS.md` with mandatory rules | Bypass | Always-on rules should remain directly available |
+| Already auto-injected long instruction files | Bypass for savings | Router cannot remove token cost that was already injected |
 | Broad architecture review | Bypass | The model needs global context, not narrow slices |
 | Refactor planning across many modules | Bypass or combine manually | Local routing may hide cross-file relationships |
 | Security-sensitive code requiring complete audit | Bypass | Completeness matters more than token reduction |
@@ -170,6 +206,8 @@ python3 scripts/run_router_tests.py tests/router-tests.json --real
 ## Design Caveats
 
 `token-router` is lossless in extraction, not omniscient in selection. If a selected range is too narrow, the cloud model should request nearby or broader line ranges. The intended workflow is iterative: route, reason, expand when needed.
+
+For static agent instructions, do not move non-negotiable safety or ownership rules out of the always-on root file purely for token savings. Use `agent_context` for long reference material that is useful only for specific tasks.
 
 ## License
 
