@@ -1,0 +1,47 @@
+name: Feature request
+description: Suggest an improvement to token-router
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What routing, documentation, model compatibility, or workflow problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the change you want.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - error_log routing
+        - heavy_code routing
+        - agent_context routing
+        - model compatibility
+        - docs
+        - tests
+        - Claude Code support
+        - Codex skill support
+        - other
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any simpler workaround, existing environment variable, or model switch you tried?
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: This request does not require publishing private logs, credentials, API keys, personal data, or proprietary code.
+          required: true

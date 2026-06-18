@@ -1,0 +1,76 @@
+name: Bug report
+description: Report a reproducible token-router bug
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please do not paste secrets, private production logs, API keys, credentials, customer data, or proprietary code.
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Router mode
+      options:
+        - error_log
+        - heavy_code
+        - agent_context
+        - not sure
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Ollama model
+      description: Include the full model and quantization tag.
+      placeholder: "gemma4:e2b-it-q4_K_M, qwen2.5-coder:7b, ..."
+    validations:
+      required: true
+  - type: checkboxes
+    id: failure_kind
+    attributes:
+      label: Failure kind
+      options:
+        - label: Invalid JSON from local model
+        - label: Poor or missing line selection
+        - label: Fallback output issue
+        - label: Output cap issue
+        - label: Documentation issue
+        - label: Other
+  - type: textarea
+    id: command
+    attributes:
+      label: Command
+      description: Paste the command you ran, with private paths or data sanitized.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output or error
+      description: Paste relevant output. Sanitize private data first.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: fixture
+    attributes:
+      label: Minimal sanitized fixture
+      description: If possible, provide a tiny sanitized input that reproduces the issue.
+      render: text
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Python version, OS, Ollama version, OLLAMA_NUM_CTX, OLLAMA_KEEP_ALIVE, ROUTER_* overrides.
+      render: text
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I removed secrets, credentials, API keys, personal data, private logs, and proprietary code.
+          required: true
+        - label: If this is a security vulnerability, I will follow SECURITY.md instead of filing a public issue.
+          required: true

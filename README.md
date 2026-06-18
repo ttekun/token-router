@@ -129,6 +129,23 @@ OLLAMA_NUM_CTX=4096 OLLAMA_KEEP_ALIVE=0s \
 python3 scripts/router.py agent_context path/to/agent-context/frontend.md --query "frontend testing workflow"
 ```
 
+### Model Reliability
+
+The default model is intentionally small so the router can run on modest local machines:
+
+```bash
+OLLAMA_MODEL=gemma4:e2b-it-q4_K_M
+```
+
+Very small local models may occasionally return invalid JSON on complex logs, unusual symbols, or dense instruction files. The router cleans common code-fence noise and falls back safely, but if JSON errors are frequent and you have enough VRAM, try a larger routing model:
+
+```bash
+OLLAMA_MODEL=qwen2.5-coder:7b \
+python3 scripts/router.py error_log path/to/deploy.log --query "timeout"
+```
+
+Community feedback suggests coder-oriented 7B models such as `qwen2.5-coder:7b`, or 4B-class Gemma variants, can reduce JSON-format failures compared with ultra-small 2B-class models. Please include your `OLLAMA_MODEL`, quantization tag, and reproduction command when reporting model-specific behavior.
+
 ### Use As A Codex Skill
 
 Install or copy this repository into your Codex skills directory:
@@ -186,6 +203,13 @@ Run against the real local model only when you intentionally want to exercise Ol
 ```bash
 python3 scripts/run_router_tests.py tests/router-tests.json --real
 ```
+
+## Contributing And Security
+
+- See [CONTRIBUTING.md](CONTRIBUTING.md) for local validation, model compatibility notes, and pull request guidelines.
+- See [SECURITY.md](SECURITY.md) for private vulnerability reporting.
+- Please do not paste secrets, private logs, credentials, API keys, personal data, customer data, or proprietary source code into public issues.
+- If you hit invalid JSON from a local model, try a larger model such as `qwen2.5-coder:7b` and include the model name in the bug report.
 
 ## When To Use vs When To Bypass
 
